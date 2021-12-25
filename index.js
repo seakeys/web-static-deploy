@@ -21,10 +21,13 @@ function webStaticDeploy (options) {
     
     var bar
     client.on('transfer', (buffer, curr, total, options) => {
+        const size = chalk.green(`${formatBytes(options.attrs.size)}`)
+        
         if (!curr) {
-            bar = new ProgressBar(`${chalk.green('✔')} ${path.basename(options.source)} :size :percent`, {total: total-1})
+            bar = new ProgressBar(`${chalk.green('✔')} ${path.basename(options.source)} :size :percent`, {total: total - 1})
+            if (total === 1) bar.tick({'size': size })
         } else {
-            bar.tick({'size': chalk.green(`${formatBytes(options.attrs.size)}`)})
+            bar.tick({'size': size })
         }
     });
     
