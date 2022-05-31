@@ -32,4 +32,3 @@ The options can contain:
     "deploy": "node ./webStaticDeploy.js"
   }
 ```
-

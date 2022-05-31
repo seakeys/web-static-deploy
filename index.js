@@ -1,36 +1,36 @@
 const chalk = require('chalk'); // v4.0.0
-const scp2 = require('scp2-next');
+const scp2 = require('./src/scp');
 const fs = require('fs');
 const path = require('path');
 const ProgressBar = require('progress');
 
-function webStaticDeploy (options) {
+function webStaticDeploy(options) {
     options.port = options.port || '22'
     options.privateKey = fs.readFileSync(options.privateKeyPath).toString()
-    
+
     console.log(`--> Deploying on host ${options.host} -p ${options.port}
 --> Upload from [${options.localPath}] to [${options.remotePath}]
 --> Uploading file...`)
-    
+
     var client = new scp2.Client({
         host: options.host,
         username: options.username,
         port: options.port,
         privateKey: options.privateKey,
     });
-    
+
     var bar
     client.on('transfer', (buffer, curr, total, options) => {
         const size = chalk.green(`${formatBytes(options.attrs.size)}`)
-        
+
         if (!curr) {
-            bar = new ProgressBar(`${chalk.green('✔')} ${path.basename(options.source)} :size :percent`, {total: total - 1})
-            if (total === 1) bar.tick({'size': size })
+            bar = new ProgressBar(`${chalk.green('✔')} ${path.basename(options.source)} :size :percent`, { total: total - 1 })
+            if (total === 1) bar.tick({ 'size': size })
         } else {
-            bar.tick({'size': size })
+            bar.tick({ 'size': size })
         }
     });
-    
+
     scp2.scp(options.localPath, {
         host: options.host,
         username: options.username,
@@ -58,6 +58,3 @@ function formatBytes(bytes, decimals = 2) {
 }
 
 module.exports = webStaticDeploy
-
-// Error: Cannot parse privateKey: Unsupported key format
-// ssh-keygen -m PEM -p -f ~/.ssh/id_rsa
