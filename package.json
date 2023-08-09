@@ -1,7 +1,7 @@
 {
   "name": "web-static-deploy",
   "version": "1.2.0",
-  "private": true,
+  "private": false,
   "main": "index.js",
   "homepage": "https://github.com/seakeys/web-static-deploy.git",
   "scripts": {},
