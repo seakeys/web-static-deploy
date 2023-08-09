@@ -1,60 +1,139 @@
-const chalk = require('chalk'); // v4.0.0
-const scp2 = require('./src/scp');
-const fs = require('fs');
-const path = require('path');
-const ProgressBar = require('progress');
+const fs = require("fs");
+const path = require("path");
+const chalk = require("chalk");
+const Client = require("ssh2").Client;
+
+const conn = new Client();
+
+let totalFilesUploaded = 0;
+let totalLocalFiles = 0;
+
+const formatBytes = (bytes) => {
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  if (bytes === 0) return "0 Byte";
+  const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+  return Math.round(bytes / Math.pow(1024, i), 2) + " " + sizes[i];
+};
+
+const uploadFile = (sftp, localFilePath, remoteFilePath) => {
+  return new Promise((resolve, reject) => {
+    const localFileStream = fs.createReadStream(localFilePath);
+    const remoteWriteStream = sftp.createWriteStream(remoteFilePath);
+
+    const stat = fs.statSync(localFilePath);
+    let uploadedBytes = 0;
+
+    localFileStream.on("data", (chunk) => {
+      uploadedBytes += chunk.length;
+      const progress = (uploadedBytes / stat.size) * 100;
+      process.stdout.clearLine();
+      process.stdout.cursorTo(0);
+      process.stdout.write(
+        chalk.green(
+          `Uploading ${path.basename(localFilePath)} - ${progress.toFixed(2)}%`
+        )
+      );
+    });
+
+    localFileStream.pipe(remoteWriteStream);
+
+    remoteWriteStream.on("close", () => {
+      process.stdout.clearLine();
+      process.stdout.cursorTo(0);
+      console.log(
+        chalk.green(
+          `Uploaded: ${path.basename(remoteFilePath)} (${formatBytes(
+            stat.size
+          )})`
+        )
+      );
+      totalFilesUploaded++;
+      resolve();
+    });
+
+    remoteWriteStream.on("error", (err) => {
+      reject(err);
+    });
+  });
+};
+
+const createRemoteDirectory = (sftp, remoteDirPath) => {
+  return new Promise((resolve, reject) => {
+    sftp.mkdir(remoteDirPath, (err) => {
+      if (err) {
+        if (err.code !== 4) {
+          reject(err);
+        } else {
+          resolve(); // Directory already exists
+        }
+      } else {
+        resolve();
+      }
+    });
+  });
+};
+
+const traverseAndUpload = async (sftp, localDir, remotePath) => {
+  const files = fs.readdirSync(localDir);
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const localFilePath = path.join(localDir, file);
+    const remoteFilePath = path.join(
+      remotePath,
+      path.relative(localDir, localFilePath)
+    );
+    const isDirectory = fs.statSync(localFilePath).isDirectory();
+
+    if (isDirectory) {
+      await createRemoteDirectory(sftp, remoteFilePath);
+      await traverseAndUpload(sftp, localFilePath, remoteFilePath);
+    } else {
+      await uploadFile(sftp, localFilePath, remoteFilePath);
+      totalLocalFiles++;
+    }
+  }
+};
 
 function webStaticDeploy(options) {
-    options.port = options.port || '22'
-    options.privateKey = fs.readFileSync(options.privateKeyPath).toString()
+  options.port = options.port || "22";
+  options.privateKey = fs.readFileSync(options.privateKeyPath).toString();
 
-    console.log(`--> Deploying on host ${options.host} -p ${options.port}
---> Upload from [${options.localPath}] to [${options.remotePath}]
---> Uploading file...`)
+  console.log(`Deploying on host ${options.host} -p ${options.port}`);
+  console.log(`Upload from [${options.localPath}] to [${options.remotePath}]`);
+  console.log(`Uploading file...`);
 
-    var client = new scp2.Client({
-        host: options.host,
-        username: options.username,
-        port: options.port,
-        privateKey: options.privateKey,
+  conn.on("ready", async () => {
+    // console.log("SSH connection ready");
+
+    conn.sftp(async (err, sftp) => {
+      if (err) throw err;
+
+      const localPath = "dist";
+      const remotePath = "/var/www/test/";
+
+      await traverseAndUpload(sftp, localPath, remotePath);
+
+      console.log(`Total files: ${totalLocalFiles}`);
+
+      console.log(`Uploaded files: ${totalFilesUploaded}`);
+
+      console.log("Deployment completed successfully!");
+
+      conn.end(); // Close the SSH connection
     });
+  });
 
-    var bar
-    client.on('transfer', (buffer, curr, total, options) => {
-        const size = chalk.green(`${formatBytes(options.attrs.size)}`)
+  conn.on("error", (err) => {
+    console.error("An error occurred:", err.message);
+  });
 
-        if (!curr) {
-            bar = new ProgressBar(`${chalk.green('✔')} ${path.basename(options.source)} :size :percent`, { total: total - 1 })
-            if (total === 1) bar.tick({ 'size': size })
-        } else {
-            bar.tick({ 'size': size })
-        }
-    });
-
-    scp2.scp(options.localPath, {
-        host: options.host,
-        username: options.username,
-        port: options.port,
-        privateKey: options.privateKey,
-        path: options.remotePath
-    }, client, err => {
-        if (!err) {
-            console.log(`--> successfully deployed`)
-        } else {
-            console.log(`--> faile deployed`)
-            console.log("err", err)
-        }
-        client.close()
-    })
+  conn.connect({
+    host: options.host,
+    port: options.port,
+    username: options.username,
+    privateKey: options.privateKey,
+  });
 }
 
-function formatBytes(bytes, decimals = 2) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
-
-module.exports = webStaticDeploy
+module.exports = webStaticDeploy;
