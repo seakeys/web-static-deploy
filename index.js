@@ -109,10 +109,7 @@ function webStaticDeploy(options) {
     conn.sftp(async (err, sftp) => {
       if (err) throw err;
 
-      const localPath = "dist";
-      const remotePath = "/var/www/test/";
-
-      await traverseAndUpload(sftp, localPath, remotePath);
+      await traverseAndUpload(sftp, options.localPath, options.remotePath);
 
       console.log(`Total files: ${totalLocalFiles}`);
 
