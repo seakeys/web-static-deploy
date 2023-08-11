@@ -95,6 +95,12 @@ const traverseAndUpload = async (sftp, localDir, remotePath) => {
   }
 };
 
+const checkIfExists = (sftp, path) => {
+  return new Promise((resolve, reject) => {
+    sftp.exists(path, (value) => resolve(value))
+  })
+}
+
 function webStaticDeploy(options) {
   options.port = options.port || "22";
   options.privateKey = fs.readFileSync(options.privateKeyPath).toString();
@@ -104,14 +110,17 @@ function webStaticDeploy(options) {
   console.log(`Uploading file...`);
 
   conn.on("ready", async () => {
-    // console.log("SSH connection ready");
 
     conn.sftp(async (err, sftp) => {
       if (err) throw err;
 
+      const isRemotePathExists = await checkIfExists(sftp, options.remotePath);
+
+      if (!isRemotePathExists) await createRemoteDirectory(sftp, options.remotePath);
+
       await traverseAndUpload(sftp, options.localPath, options.remotePath);
 
-      console.log(`Total files: ${totalLocalFiles}`);
+      console.log(`Local files: ${totalLocalFiles}`);
 
       console.log(`Uploaded files: ${totalFilesUploaded}`);
 
