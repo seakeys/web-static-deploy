@@ -1,3 +1,4 @@
+const os = require('os');
 const fs = require("fs");
 const path = require("path");
 const chalk = require("chalk");
@@ -103,7 +104,9 @@ const checkIfExists = (sftp, path) => {
 
 function webStaticDeploy(options) {
   options.port = options.port || "22";
-  options.privateKey = fs.readFileSync(options.privateKeyPath).toString();
+
+  const sshKeyPath = options.privateKeyPath || path.join(os.homedir(), '.ssh', 'id_rsa');
+  options.privateKey = fs.readFileSync(sshKeyPath).toString()
 
   console.log(`Deploying on host ${options.host} -p ${options.port}`);
   console.log(`Upload from [${options.localPath}] to [${options.remotePath}]`);
