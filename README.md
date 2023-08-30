@@ -24,8 +24,8 @@ The options object can include the following properties:
 - `destination`
   - `host`: The IP address of the server.
   - `username`: The authentication username (e.g., "root").
-  - `port`: The port number of the server. Default is 22.
-  - `privateKeyPath`: The local path to the client's private key (e.g., "c:/Users/***/.ssh/id_rsa").
+  - `port`(optional): The port number of the server. Default is 22.
+  - `privateKeyPath`(optional): The local path to the client's private key. If not specified, the system's default SSH key at "ssh/id_rsa" will be used.
   - `localPath`: The local file path to the resources you want to upload (e.g., "dist").
   - `remotePath`: The destination path on the server where the files will be uploaded (e.g., "/var/www/***").
   

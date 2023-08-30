@@ -2,7 +2,7 @@ const os = require('os');
 const fs = require("fs");
 const path = require("path");
 const chalk = require("chalk");
-const Client = require("ssh2").Client;
+const { Client } = require("ssh2");
 
 const conn = new Client();
 
@@ -30,7 +30,7 @@ const uploadFile = (sftp, localFilePath, remoteFilePath) => {
       process.stdout.clearLine();
       process.stdout.cursorTo(0);
       process.stdout.write(
-        chalk.green(
+        chalk.blue(
           `Uploading ${path.basename(localFilePath)} - ${progress.toFixed(2)}%`
         )
       );
@@ -42,11 +42,7 @@ const uploadFile = (sftp, localFilePath, remoteFilePath) => {
       process.stdout.clearLine();
       process.stdout.cursorTo(0);
       console.log(
-        chalk.green(
-          `Uploaded: ${path.basename(remoteFilePath)} (${formatBytes(
-            stat.size
-          )})`
-        )
+        `${chalk.green('Uploaded:')} ${chalk.magenta(path.basename(remoteFilePath))} ${chalk.gray(`(${formatBytes(stat.size)})`)}`
       );
       totalFilesUploaded++;
       resolve();
