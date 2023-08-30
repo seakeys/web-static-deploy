@@ -2,6 +2,8 @@
 
 Automate the deployment of local static resources to a remote server.
 
+![上传图片](example.png)
+
 ## Installation
 
 To install the package, use the following command:
