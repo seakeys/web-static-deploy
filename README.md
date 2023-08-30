@@ -2,7 +2,7 @@
 
 Automate the deployment of local static resources to a remote server.
 
-![上传图片](example.png)
+![上传图片](https://github.com/seakeys/web-static-deploy/blob/master/example.png)
 
 ## Installation
 
