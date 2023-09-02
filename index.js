@@ -75,11 +75,11 @@ const traverseAndUpload = async (sftp, localDir, remotePath) => {
 
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    const localFilePath = path.join(localDir, file);
-    const remoteFilePath = path.join(
+    const localFilePath = pathToUnix(path.join(localDir, file));
+    const remoteFilePath = pathToUnix(path.join(
       remotePath,
       path.relative(localDir, localFilePath)
-    );
+    ));
     const isDirectory = fs.statSync(localFilePath).isDirectory();
 
     if (isDirectory) {
@@ -92,10 +92,14 @@ const traverseAndUpload = async (sftp, localDir, remotePath) => {
   }
 };
 
-const checkIfExists = (sftp, path) => {
+function checkIfExists(sftp, path) {
   return new Promise((resolve, reject) => {
-    sftp.exists(path, (value) => resolve(value))
+    sftp.exists(path, (value) => resolve(value));
   })
+}
+
+function pathToUnix(filePath) {
+  return filePath.split(path.sep).join('/');
 }
 
 function webStaticDeploy(options) {
