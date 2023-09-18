@@ -14,7 +14,7 @@ npm install web-static-deploy
 
 ## Usage
 
-1. Create a file named webStaticDeploy.js in the root directory of your project.
+1. Create a file named deploy.js in the root directory of your project.
 
 ```js
 const webStaticDeploy = require('web-static-deploy')
@@ -25,17 +25,18 @@ The options object can include the following properties:
 
 - `destination`
   - `host`: The IP address of the server.
-  - `username`: The authentication username (e.g., "root").
+  - `username`: The authentication username. Default is root.
   - `port`(optional): The port number of the server. Default is 22.
   - `privateKeyPath`(optional): The local path to the client's private key. If not specified, the system's default SSH key at "ssh/id_rsa" will be used.
   - `localPath`: The local file path to the resources you want to upload (e.g., "dist").
   - `remotePath`: The destination path on the server where the files will be uploaded (e.g., "/var/www/***").
+  - `openURL`(optional): The URL where you can access the deployed content once it's uploaded.
   
 2. Add a deployment script to your package.json:
 
 ```js
   "scripts": {
-    "deploy": "node webStaticDeploy.js"
+    "deploy": "node deploy.js"
   }
 ```
 
@@ -45,4 +46,4 @@ Now you can run the deployment script using:
   npm run deploy
 ```
 
-Make sure you've configured the options object in your webStaticDeploy.js file according to your server settings and project structure. This setup will help you automate the process of deploying static resources to your remote server.
+Make sure you've configured the options object in your deploy.js file according to your server settings and project structure. This setup will help you automate the process of deploying static resources to your remote server.

@@ -103,10 +103,15 @@ function pathToUnix(filePath) {
 }
 
 function webStaticDeploy(options) {
+  options.username = options.username || "root";
   options.port = options.port || "22";
 
   const sshKeyPath = options.privateKeyPath || path.join(os.homedir(), '.ssh', 'id_rsa');
   options.privateKey = fs.readFileSync(sshKeyPath).toString()
+
+  if (!options.localPath) return console.error("localPath is required!");
+
+  if (!options.remotePath) return console.error("remotePath is required!");
 
   console.log(`Deploying on host ${options.host} -p ${options.port}`);
   console.log(`Upload from [${options.localPath}] to [${options.remotePath}]`);
@@ -126,6 +131,8 @@ function webStaticDeploy(options) {
       console.log(`Local files: ${totalLocalFiles}`);
 
       console.log(`Uploaded files: ${totalFilesUploaded}`);
+
+      if (options.openUrl) console.log(`Deployment URL: ${chalk.blue.underline(options.openUrl)}`);
 
       console.log("Deployment completed successfully!");
 
