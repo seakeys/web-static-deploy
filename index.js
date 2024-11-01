@@ -144,12 +144,7 @@ function webStaticDeploy(options) {
     console.error("An error occurred:", err.message);
   });
 
-  conn.connect({
-    host: options.host,
-    port: options.port,
-    username: options.username,
-    privateKey: options.privateKey,
-  });
+  conn.connect(options);
 }
 
 module.exports = webStaticDeploy;
